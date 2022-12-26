@@ -1,0 +1,19 @@
+FROM amazoncorretto:17.0.4
+
+ARG DB_HOST
+ARG DB_PORT
+ARG DB_NAME
+ARG DB_USER
+ARG DB_PASSWORD
+ARG RABBITMQ_USER
+ARG RABBITMQ_PASSWORD
+ARG RABBITMQ_HOST
+ARG RABBITMQ_PORT
+
+VOLUME /tmp
+
+ADD target/*.jar telegrambot-server.jar
+
+EXPOSE 8082
+
+ENTRYPOINT ["java", "-jar", "/telegrambot-server.jar"]
