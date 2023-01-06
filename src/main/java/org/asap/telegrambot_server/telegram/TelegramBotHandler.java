@@ -1,5 +1,6 @@
 package org.asap.telegrambot_server.telegram;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asap.telegrambot_server.model.entity.Message;
 import org.asap.telegrambot_server.service.RabbitMQProducer;
@@ -11,26 +12,20 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TelegramBotHandler extends TelegramLongPollingBot {
 
-    private final String botToken;
-    private final String botName;
-    private final RabbitMQProducer producer;
+    @Value("${telegram.bot.token}")
+    private String botToken;
 
-    public TelegramBotHandler(@Value("${telegram.bot.token}") final String botToken,
-                              @Value("${telegram.bot.name}") final String botName,
-                              final RabbitMQProducer producer) {
-        this.botToken = botToken;
-        this.botName = botName;
-        this.producer = producer;
-    }
+    @Value("${telegram.bot.name}")
+    private String botName;
+
+    private final RabbitMQProducer producer;
 
     @Override
     public String getBotUsername() {
@@ -55,7 +50,6 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
 
                 sendMessageRequest.setChatId(message.getChatId().toString());
                 sendMessageRequest.setText("Your message (reply):  " + message.getText() + "\nFrom - " + username);
-
                 try {
                     producer.produce(msg);
                     execute(sendMessageRequest);
