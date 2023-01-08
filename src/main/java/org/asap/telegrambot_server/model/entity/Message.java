@@ -20,4 +20,6 @@ public class Message extends BaseEntity {
     private LocalDateTime time;
 
     private String message;
+
+    private Long chatId;
 }

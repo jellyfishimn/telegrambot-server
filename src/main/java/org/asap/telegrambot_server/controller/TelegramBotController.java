@@ -16,7 +16,7 @@ public class TelegramBotController {
     private final TelegramBotClient client;
 
     @PostMapping("/sendMessage")
-    public void test(@RequestParam final String chatId, @RequestParam final String message) {
+    public void testSendMessage(@RequestParam final String chatId, @RequestParam final String message) {
         client.sendMessage(chatId, message, TelegramParseTextMode.MarkdownV2);
     }
 }
