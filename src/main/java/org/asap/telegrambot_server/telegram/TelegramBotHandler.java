@@ -3,6 +3,7 @@ package org.asap.telegrambot_server.telegram;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asap.telegrambot_server.model.entity.Message;
+import org.asap.telegrambot_server.repository.MessageRepository;
 import org.asap.telegrambot_server.service.RabbitMQProducer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,8 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
 
     private final RabbitMQProducer producer;
 
+    private final MessageRepository messageRepository;
+
     @Override
     public String getBotUsername() {
         return botName;
@@ -44,12 +47,20 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
             if (message.hasText()) {
                 var sendMessageRequest = new SendMessage();
                 var username = message.getFrom().getUserName();
+
+                if (isFirstChat(username)) {
+
+                }
+
+
                 // need to fix
                 var time = Instant.ofEpochMilli(message.getDate()).atZone(ZoneId.systemDefault()).toLocalDateTime();
-                var msg = Message.of(username, time, message.getText());
+                var msg = Message.of(username, time, message.getText(), message.getChatId());
 
                 sendMessageRequest.setChatId(message.getChatId().toString());
-                sendMessageRequest.setText("Your message (reply):  " + message.getText() + "\nFrom - " + username);
+                sendMessageRequest.setText("Reply:  " + message.getText() + "\nFrom - " + username);
+
+
                 try {
                     producer.produce(msg);
                     execute(sendMessageRequest);
@@ -58,5 +69,9 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
                 }
             }
         }
+    }
+
+    private boolean isFirstChat(final String username) {
+       return messageRepository.findByUsername(username).isPresent();
     }
 }
