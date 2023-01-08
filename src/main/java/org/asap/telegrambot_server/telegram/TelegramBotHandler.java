@@ -13,7 +13,10 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+
+import static org.asap.telegrambot_server.service.Messages.GREETINGS_MESSAGE;
 
 @Slf4j
 @Component
@@ -48,30 +51,28 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
                 var sendMessageRequest = new SendMessage();
                 var username = message.getFrom().getUserName();
 
-                if (isFirstChat(username)) {
-
+                if (messageRepository.findByUsername(username).isEmpty()) {
+                    var greetingsMessage = Message.of(username, LocalDateTime.now(), GREETINGS_MESSAGE, message.getChatId());
+                    messageRepository.save(greetingsMessage);
                 }
 
-
-                // need to fix
+                // FIXME need normal conversion
                 var time = Instant.ofEpochMilli(message.getDate()).atZone(ZoneId.systemDefault()).toLocalDateTime();
-                var msg = Message.of(username, time, message.getText(), message.getChatId());
+                var newMessage = Message.of(username, time, message.getText(), message.getChatId());
+                messageRepository.save(newMessage);
 
+                // TODO just for check connection with user
                 sendMessageRequest.setChatId(message.getChatId().toString());
                 sendMessageRequest.setText("Reply:  " + message.getText() + "\nFrom - " + username);
 
 
                 try {
-                    producer.produce(msg);
+                    producer.produce(newMessage);
                     execute(sendMessageRequest);
                 } catch (TelegramApiException e) {
                     log.error(e.getMessage(), e);
                 }
             }
         }
-    }
-
-    private boolean isFirstChat(final String username) {
-       return messageRepository.findByUsername(username).isPresent();
     }
 }
